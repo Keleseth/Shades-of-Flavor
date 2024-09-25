@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from .models import Tag, Ingredient, Recipe, RecipeIngredient
+from users.models import Subscription
 from users.serializers import Base64ImageField, CustomUserSerializer
 
 
@@ -55,14 +56,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         many=True,
         source='recipe_ingredients',
     )
-    tags = TagSerializer(
-        many=True,
-        read_only=True
-    )
     tags = serializers.PrimaryKeyRelatedField(
-        queryset=Tag.objects.all(),
-        many=True,
-        write_only=True
+        many=True, queryset=Tag.objects.all()
     )
     is_favorited = serializers.SerializerMethodField()
     # is_in_shopping_cart = serializers.SerializerMethodField()
@@ -82,12 +77,22 @@ class RecipeSerializer(serializers.ModelSerializer):
             # 'is_in_shopping_cart',
         )
 
+    def to_representation(self, instance):
+        recipe_representation = super().to_representation(instance)
+        tags = instance.tags.all()
+        recipe_representation['tags'] = TagSerializer(
+            tags,
+            many=True
+        ).data
+        return recipe_representation
+
     def get_is_favorited(self, obj):
         user = self.context.get('request').user
         if user.is_authenticated:
             return obj.is_favorited.filter(id=user.id).exists()
 
     def create(self, validated_data):
+        user = self.context['request'].user
         ingredients_data = validated_data.pop('recipe_ingredients')
         tags_data = validated_data.pop('tags')
         recipe = Recipe.objects.create(
@@ -104,6 +109,7 @@ class RecipeSerializer(serializers.ModelSerializer):
                 )
             )
         RecipeIngredient.objects.bulk_create(recipe_ingredient_list)
+        recipe.is_favorited.add(user)
         return recipe
 
 

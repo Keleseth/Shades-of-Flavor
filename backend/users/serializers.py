@@ -45,9 +45,8 @@ class CustomUserSerializer(UserSerializer):
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         if request.user.is_authenticated:
-            return Subscription.objects.filter(
-                subscribers=request.user,
-                subscriptions=obj
+            return obj.subscribers.filter(
+                id=request.user.id
             ).exists()
 
 
@@ -79,4 +78,5 @@ class GetSubscriptionsSerializer(serializers.ModelSerializer):
             'last_name',
             'avatar',
             'is_subscribed',
+            'recipes'
         )

@@ -41,5 +41,6 @@ class UserDjoserViewSet(UserViewSet):
         url_path='subscriptions',
     )
     def get_subscriptiosn(self, request, *args, **kwargs):
-        user = request.user
-        serializer = None
+        if request.user.is_authenticated:
+            user = request.user
+            # serializer = 
