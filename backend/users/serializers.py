@@ -9,6 +9,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 
+from api.base_serializers import BaseRecipeSerializer
+
 
 class Base64ImageField(serializers.ImageField):
     def to_internal_value(self, data):
@@ -21,33 +23,40 @@ class Base64ImageField(serializers.ImageField):
         return super().to_internal_value(data)
 
 
-class CustomUserSerializer(UserSerializer):
+class BaseCustomUserSerializer(UserSerializer):
 
     avatar = Base64ImageField(required=False, allow_null=True)
     is_subscribed = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = CustomUser
-        fields = (
+        fields = [
             'id',
             'email',
             'username',
             'first_name',
             'last_name',
             'avatar',
-            'password',
             'is_subscribed',
-        )
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
+        ]
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         if request.user.is_authenticated:
-            return obj.subscribers.filter(
-                id=request.user.id
+            return obj.subscriptions.filter(
+                subscribers=request.user
             ).exists()
+
+
+class CustomUserSerializer(BaseCustomUserSerializer):
+
+    class Meta(BaseCustomUserSerializer.Meta):
+        fields = BaseCustomUserSerializer.Meta.fields + ['password']
+
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
 
 
 class UserDjoserSerializer(UserSerializer):
@@ -66,17 +75,20 @@ class UserDjoserSerializer(UserSerializer):
         )
 
 
-class GetSubscriptionsSerializer(serializers.ModelSerializer):
+class GetSubscriptionsSerializer(BaseCustomUserSerializer):
 
-    class Meta:
-        model = CustomUser
-        fields = (
-            'email',
-            'id',
-            'username',
-            'first_name',
-            'last_name',
-            'avatar',
-            'is_subscribed',
-            'recipes'
-        )
+    recipes = BaseRecipeSerializer(
+        read_only=True,
+        many=True
+    )
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta(BaseCustomUserSerializer.Meta):
+        fields = BaseCustomUserSerializer.Meta.fields + [
+            'recipes',
+            'recipes_count',
+        ]
+
+    def get_recipes_count(self, obj):
+        recipes = obj.recipes.all()
+        return recipes.count()

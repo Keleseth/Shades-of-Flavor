@@ -3,6 +3,7 @@ from rest_framework import serializers
 from .models import Tag, Ingredient, Recipe, RecipeIngredient
 from users.models import Subscription
 from users.serializers import Base64ImageField, CustomUserSerializer
+from .base_serializers import BaseRecipeSerializer
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -48,7 +49,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         return obj.ingredient.measurement_unit
 
 
-class RecipeSerializer(serializers.ModelSerializer):
+class RecipeSerializer(BaseRecipeSerializer):
 
     author = CustomUserSerializer(read_only=True)
     image = Base64ImageField(required=True, allow_null=False)
@@ -62,20 +63,16 @@ class RecipeSerializer(serializers.ModelSerializer):
     is_favorited = serializers.SerializerMethodField()
     # is_in_shopping_cart = serializers.SerializerMethodField()
 
-    class Meta:
+    class Meta(BaseRecipeSerializer.Meta):
         model = Recipe
-        fields = (
-            'id',
+        fields = BaseRecipeSerializer.Meta.fields + [
             'author',
-            'name',
             'text',
-            'image',
-            'cooking_time',
             'tags',
             'ingredients',
             'is_favorited',
             # 'is_in_shopping_cart',
-        )
+        ]
 
     def to_representation(self, instance):
         recipe_representation = super().to_representation(instance)
