@@ -1,10 +1,17 @@
 version: '3.3'
-services:
 
+volumes:
+  static:
+  media:
+
+services:
 
   backend:
     container_name: foodgram-backend
     build: ../backend
+    volumes:
+      - static:/backend_static/
+      - media:/media/
   frontend:
     container_name: foodgram-front
     build: ../frontend
@@ -19,3 +26,5 @@ services:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
+      - static:/static/
+      - media:/media/

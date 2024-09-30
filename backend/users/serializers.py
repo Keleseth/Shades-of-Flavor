@@ -46,6 +46,7 @@ class BaseCustomUserSerializer(UserSerializer):
             return obj.subscriptions.filter(
                 subscribers=request.user
             ).exists()
+        return False
 
 
 class CustomUserSerializer(BaseCustomUserSerializer):
@@ -58,21 +59,20 @@ class CustomUserSerializer(BaseCustomUserSerializer):
         }
 
 
-
-class UserDjoserSerializer(UserSerializer):
+class UserAvatarSerializer(UserSerializer):
     avatar = Base64ImageField(required=False, allow_null=True)
     # is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
         fields = (
-            'email',
-            'id',
-            'username',
-            'first_name',
-            'last_name',
-            'avatar'
+            'avatar',
         )
+
+    def validate(self, attrs):
+        if 'avatar' not in attrs:
+            raise serializers.ValidationError({'detail': 'Файл аватарки не был передан.'})
+        return attrs
 
 
 class GetSubscriptionsSerializer(BaseCustomUserSerializer):

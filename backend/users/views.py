@@ -3,9 +3,8 @@ from users.models import CustomUser, Subscription
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status, pagination
-from .serializers import UserDjoserSerializer
 from rest_framework.decorators import action
-from .serializers import UserDjoserSerializer, CustomUserSerializer, GetSubscriptionsSerializer
+from .serializers import UserAvatarSerializer, CustomUserSerializer, GetSubscriptionsSerializer
 
 
 class UserDjoserViewSet(UserViewSet):
@@ -13,7 +12,7 @@ class UserDjoserViewSet(UserViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
     permission_classes = [IsAuthenticated]
-    pagination_class = pagination.PageNumberPagination
+    # pagination_class = pagination.PageNumberPagination
 
     @action(
         ['PUT', 'DELETE'],
@@ -26,7 +25,7 @@ class UserDjoserViewSet(UserViewSet):
             user.avatar = None
             user.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        serializer = UserDjoserSerializer(data=request.data, partial=True)
+        serializer = UserAvatarSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         avatar_data = serializer.validated_data.get('avatar')
         user.avatar = avatar_data

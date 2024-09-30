@@ -1,10 +1,23 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, status, response
+from rest_framework import viewsets, status, response, pagination
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
+from django_filters import rest_framework as filters
 
+from .permissions import RecipePermission
 from .models import Tag, Ingredient, Recipe
 from .serializers import TagSerializer, IngredientSerializer, RecipeSerializer, FavoriteRecipeSerializer
+from users.models import CustomUser
+
+
+class RecipeFilter(filters.FilterSet):
+    
+    author = filters.ModelChoiceFilter(queryset=CustomUser.objects.all())
+    tags = filters.AllValuesMultipleFilter(field_name='tags__slug')
+
+    class Meta:
+        model = Recipe
+        fields = ('author', 'tags')
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -20,16 +33,21 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
+
     serializer_class = RecipeSerializer
     queryset = Recipe.objects.all().prefetch_related(
         'ingredients',
         'tags',
     ). select_related('author')
     permission_classes = (AllowAny,)
-    pagination_class = None
+    pagination_class = pagination.PageNumberPagination
+    filterset_class = RecipeFilter
+    pagination_class = pagination.LimitOffsetPagination
+    permission_classes = (RecipePermission,)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return response.Response(
