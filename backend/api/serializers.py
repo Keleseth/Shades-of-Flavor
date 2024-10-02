@@ -1,7 +1,9 @@
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
-from .models import Tag, Ingredient, Recipe, RecipeIngredient
+from .models import Tag, Ingredient, Recipe, RecipeIngredient, FavoriteRecipe
 from users.serializers import Base64ImageField, CustomUserSerializer
+
 from .base_serializers import BaseRecipeSerializer
 
 
@@ -14,7 +16,10 @@ class TagSerializer(serializers.ModelSerializer):
             'name',
             'slug'
         )
-        read_only_fields = ('name', 'slug')
+        read_only_fields = (
+            'name',
+            'slug',
+        )
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -97,7 +102,7 @@ class RecipeSerializer(BaseRecipeSerializer):
     def get_is_in_shopping_cart(self, obj):
         user = self.context.get('request').user
         if user.is_authenticated:
-            return user.in_cart_of_users.filter(id=obj.id).exists()
+            return user.recipes_in_cart.filter(id=obj.id).exists()
         return False
 
     def create(self, validated_data):
@@ -169,10 +174,35 @@ class RecipeSerializer(BaseRecipeSerializer):
         return attrs
 
 
-class FavoriteRecipeSerializer(serializers.ModelSerializer):
+class FavoriteOrShoppingRepresentationSerializer(serializers.ModelSerializer):
 
     image = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Recipe
-        fields = ['id', 'name', 'image', 'cooking_time']
+        fields = (
+            'id',
+            'name',
+            'image',
+            'cooking_time',
+        )
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = FavoriteRecipe
+        fields = (
+            'user',
+            'recipe',
+        )
+        validators = [
+            UniqueTogetherValidator(
+                queryset=FavoriteRecipe.objects.all(),
+                fields=('user', 'recipe')
+            )
+        ]
+
+    def to_representation(self, instance):
+        pass
+        

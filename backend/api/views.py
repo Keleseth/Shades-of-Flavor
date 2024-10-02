@@ -1,23 +1,52 @@
-from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, status, response, pagination
+from django.urls import reverse
+from django.shortcuts import get_object_or_404, redirect
+from rest_framework import (
+    viewsets,
+    status,
+    response,
+    pagination,
+    views,
+    exceptions
+)
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
 from django_filters import rest_framework as filters
 
-from .permissions import RecipePermission
+from .permissions import AuthorAdminOrReadOnly, AuthenticatedOrReadOnlyRequest
 from .models import Tag, Ingredient, Recipe
-from .serializers import TagSerializer, IngredientSerializer, RecipeSerializer, FavoriteRecipeSerializer
+from .serializers import (
+    TagSerializer,
+    IngredientSerializer,
+    RecipeSerializer,
+    FavoriteOrShoppingSerializer
+)
 from users.models import CustomUser
+from .utils import (
+    check_and_add_favorite,
+    check_and_delete_from_favorite,
+    check_and_add_to_cart,
+    check_and_delete_from_cart
+)
 
 
 class RecipeFilter(filters.FilterSet):
-    
+
     author = filters.ModelChoiceFilter(queryset=CustomUser.objects.all())
     tags = filters.AllValuesMultipleFilter(field_name='tags__slug')
+    is_favorited = filters.BooleanFilter(
+        field_name='is_favorited',
+        method='filter_is_favorited',
+    )
 
     class Meta:
         model = Recipe
-        fields = ('author', 'tags')
+        fields = ('author', 'tags',)
+
+    def filter_is_favorited(self, queryset, name, value):
+        user = self.request.user
+        if value is True:
+            return user.favorited.all()
+        return queryset.exclude(is_favorited=user)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -39,11 +68,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         'ingredients',
         'tags',
     ). select_related('author')
-    permission_classes = (AllowAny,)
     pagination_class = pagination.PageNumberPagination
     filterset_class = RecipeFilter
     pagination_class = pagination.LimitOffsetPagination
-    permission_classes = (RecipePermission,)
+    permission_classes = (AuthorAdminOrReadOnly,)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -64,30 +92,65 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ['POST', 'DELETE'],
         detail=True,
         url_path='favorite',
-        permission_classes=(IsAuthenticated,),
+        url_name='favorite',
+        permission_classes=(AuthenticatedOrReadOnlyRequest,),
     )
     def add_favorite(self, request, pk=None):
         recipe = get_object_or_404(Recipe, id=pk)
-        user = self.request.user
 
         if request.method == 'POST':
-            if user.favorited.filter(id=recipe.id).exists():
-                return response.Response(
-                    {'detail': 'Рецепт уже в избранном.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            user.favorited.add(recipe)
-            serializer = FavoriteRecipeSerializer(recipe)
-            return response.Response(
-                serializer.data,
-                status=status.HTTP_201_CREATED
+            return check_and_add_favorite(
+                request, recipe, FavoriteOrShoppingSerializer
             )
 
         if request.method == 'DELETE':
-            if not user.favorited.filter(id=recipe.id).exists():
-                return response.Response(
-                    {'detail': 'Рецепт отсутствует в избранном.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            user.favorited.remove(recipe)
-            return response.Response(status=status.HTTP_204_NO_CONTENT)
+            return check_and_delete_from_favorite(request, recipe)
+
+    @action(
+        ['POST', 'DELETE'],
+        detail=True,
+        url_path='shopping_cart',
+        url_name='shopping_cart',
+        permission_classes=(IsAuthenticated,),
+    )
+    def add_to_shopping_cart(self, request, pk=None):
+        recipe = get_object_or_404(Recipe, id=pk)
+
+        if request.method == 'POST':
+            return check_and_add_to_cart(
+                request, recipe, FavoriteOrShoppingSerializer
+            )
+
+        if request.method == 'DELETE':
+            return check_and_delete_from_cart(request, recipe)
+
+
+    @action(
+        ['GET'],
+        detail=True,
+        url_path='get-link',
+    )
+    def recipe_short_link(self, request, pk):
+        try:
+            recipe = self.get_object()
+        except Recipe.DoesNotExist:
+            raise exceptions.NotFound('Рецепт не найден.')
+
+        domain = f'{request.scheme}://{request.get_host()}'
+
+        short_link_url = recipe.short_link
+        return response.Response(
+            {'short-link': f'{domain}/s/{short_link_url}'},
+            status=status.HTTP_200_OK
+        )
+
+
+class RecipeRedirectApiView(views.APIView):
+    def get(self, request, *args, **kwargs):
+        link = kwargs.get('short_link')
+        recipe = get_object_or_404(
+            Recipe,
+            short_link=link
+        )
+        recipe_url = reverse('recipes-detail', kwargs={'pk': recipe.id})
+        return redirect(recipe_url)

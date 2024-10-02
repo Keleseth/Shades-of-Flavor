@@ -1,23 +1,39 @@
 from djoser.views import UserViewSet
 from users.models import CustomUser, Subscription
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework import status, pagination
 from rest_framework.decorators import action
+
 from .serializers import UserAvatarSerializer, CustomUserSerializer, GetSubscriptionsSerializer
+from .validators import subscription_creatable
+from api.permissions import AuthorAdminOrReadOnly, AuthenticatedOrReadOnlyRequest
 
 
-class UserDjoserViewSet(UserViewSet):
+class CustomUserViewSet(UserViewSet):
 
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
-    permission_classes = [IsAuthenticated]
-    # pagination_class = pagination.PageNumberPagination
+    permission_classes = (AuthorAdminOrReadOnly,)
+    pagination_class = pagination.PageNumberPagination
+    pagination_class.page_size_query_param = 'limit'
+
+    def list(self, request, *args, **kwargs):
+        queryset = CustomUser.objects.all()
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
         ['PUT', 'DELETE'],
         detail=False,
         url_path='me/avatar',
+        permission_classes=(AuthenticatedOrReadOnlyRequest,)
     )
     def change_avatar(self, request, *args, **kwargs):
         user = request.user
@@ -65,15 +81,9 @@ class UserDjoserViewSet(UserViewSet):
     def add_delete_subscription(self, request, *args, **kwargs):
         user = request.user
         subscribed_user_id = kwargs.get('id')
-        try:
-            subscribed_user = CustomUser.objects.get(id=subscribed_user_id)
-        except CustomUser.DoesNotExist:
-            return Response(
-                {'detail': 'Пользователь не найден.'},
-                status=status.HTTP_404_NOT_FOUND
-            )
+        subscribed_user = subscription_creatable(user, subscribed_user_id)
         if request.method == 'POST':
-            if user.subscriptions.filter(subscribers=subscribed_user).exists():
+            if user.subscribers.filter(subscriptions=subscribed_user).exists():
                 return Response(
                     {'detail': 'Вы уже подписаны на данного пользователя.'},
                     status=status.HTTP_400_BAD_REQUEST
@@ -87,3 +97,19 @@ class UserDjoserViewSet(UserViewSet):
                 context={'request': request}
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # Хотя это и необязательное условие, я предпочитаю добавлять такие
+        # строки для ясности.
+        if request.method == 'DELETE':
+            if not Subscription.objects.filter(
+                subscriptions=subscribed_user,
+                subscribers=user
+            ).exists():
+                return Response(
+                    {'detail': 'Вы не подписаны на этого пользователя.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            Subscription.objects.get(
+                subscriptions=subscribed_user,
+                subscribers=user
+            ).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)

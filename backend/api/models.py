@@ -1,4 +1,5 @@
 import csv
+import uuid
 
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify
@@ -7,6 +8,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 
 
 CustomUser = get_user_model()
+
 
 # class IngredientManagerCSV(models.BaseManager):
 #     def load_csv_data(self, csv_file_path):
@@ -118,12 +120,24 @@ class Recipe(models.Model):
     )
     is_in_shopping_cart = models.ManyToManyField(
         CustomUser,
-        related_name='in_cart_of_users',
+        related_name='recipes_in_cart',
         verbose_name='список покупок'
+    )
+    short_link = models.CharField(
+        max_length=9,
+        unique=True,
+        blank=True,
+        null=True,
+        verbose_name='короткая ссылка',
     )
 
     def __str__(self) -> str:
         return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.short_link:
+            self.short_link = uuid.uuid4().hex[:9]
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'рецепт'
@@ -150,3 +164,29 @@ class RecipeIngredient(models.Model):
 
     class Meta:
         unique_together = ('recipe', 'ingredient')
+
+
+class FavoriteRecipe(models.Model):
+    user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='favorites',
+        verbose_name='пользователь'
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='favorites',
+        verbose_name='рецепт'
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_favorite_recipe',
+                violation_error_message='Рецепт уже в избранных'
+            )
+        ]
+        verbose_name = 'избранный рецепт'
+        verbose_name_plural = 'Избранные рецепты'

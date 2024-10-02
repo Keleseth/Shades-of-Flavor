@@ -92,3 +92,12 @@ class GetSubscriptionsSerializer(BaseCustomUserSerializer):
     def get_recipes_count(self, obj):
         recipes = obj.recipes.all()
         return recipes.count()
+
+    def to_representation(self, instance):
+        request = self.context['request']
+        limit = request.query_params.get('recipes_limit')
+        representation = super().to_representation(instance)
+
+        if limit:
+            representation['recipes'] = representation['recipes'][:int(limit)]
+        return representation
