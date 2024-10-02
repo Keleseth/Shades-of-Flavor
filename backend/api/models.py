@@ -87,6 +87,7 @@ class Recipe(models.Model):
     )
     is_favorited = models.ManyToManyField(
         CustomUser,
+        through='FavoriteRecipe',
         related_name='favorited',
         verbose_name='избранные рецепты'
     )
@@ -120,6 +121,7 @@ class Recipe(models.Model):
     )
     is_in_shopping_cart = models.ManyToManyField(
         CustomUser,
+        through='UserRecipeShoppingCart',
         related_name='recipes_in_cart',
         verbose_name='список покупок'
     )
@@ -185,8 +187,32 @@ class FavoriteRecipe(models.Model):
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
                 name='unique_favorite_recipe',
-                violation_error_message='Рецепт уже в избранных'
             )
         ]
         verbose_name = 'избранный рецепт'
         verbose_name_plural = 'Избранные рецепты'
+
+
+class UserRecipeShoppingCart(models.Model):
+    user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='in_cart',
+        verbose_name='пользователь'
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='in_cart',
+        verbose_name='рецепт'
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_recipe_in_cart',
+            )
+        ]
+        verbose_name = 'рецепт в корзине'
+        verbose_name_plural = 'Рецепты в корзине'

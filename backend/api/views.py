@@ -15,14 +15,15 @@ from django_filters import rest_framework as filters
 from .permissions import AuthorAdminOrReadOnly, AuthenticatedOrReadOnlyRequest
 from .models import Tag, Ingredient, Recipe
 from .serializers import (
+    FavoriteSerializer,
     TagSerializer,
     IngredientSerializer,
     RecipeSerializer,
-    FavoriteOrShoppingSerializer
+    ShoppingSerializer,
 )
 from users.models import CustomUser
 from .utils import (
-    check_and_add_favorite,
+    check_and_add,
     check_and_delete_from_favorite,
     check_and_add_to_cart,
     check_and_delete_from_cart
@@ -99,12 +100,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, id=pk)
 
         if request.method == 'POST':
-            return check_and_add_favorite(
-                request, recipe, FavoriteOrShoppingSerializer
+            return check_and_add(
+                request, recipe, FavoriteSerializer
             )
 
         if request.method == 'DELETE':
-            return check_and_delete_from_favorite(request, recipe)
+            return check_and_delete_from_favorite(
+                request, recipe
+            )
 
     @action(
         ['POST', 'DELETE'],
@@ -117,8 +120,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, id=pk)
 
         if request.method == 'POST':
-            return check_and_add_to_cart(
-                request, recipe, FavoriteOrShoppingSerializer
+            return check_and_add(
+                request, recipe, ShoppingSerializer
             )
 
         if request.method == 'DELETE':

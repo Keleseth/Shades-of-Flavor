@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from .models import Tag, Ingredient, Recipe, RecipeIngredient, FavoriteRecipe
+from .models import Tag, Ingredient, Recipe, RecipeIngredient, FavoriteRecipe, UserRecipeShoppingCart
 from users.serializers import Base64ImageField, CustomUserSerializer
 
 from .base_serializers import BaseRecipeSerializer
@@ -174,9 +174,7 @@ class RecipeSerializer(BaseRecipeSerializer):
         return attrs
 
 
-class FavoriteOrShoppingRepresentationSerializer(serializers.ModelSerializer):
-
-    image = Base64ImageField(required=False, allow_null=True)
+class FavoriteOrShoppingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
@@ -189,7 +187,7 @@ class FavoriteOrShoppingRepresentationSerializer(serializers.ModelSerializer):
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
-    
+
     class Meta:
         model = FavoriteRecipe
         fields = (
@@ -199,10 +197,28 @@ class FavoriteSerializer(serializers.ModelSerializer):
         validators = [
             UniqueTogetherValidator(
                 queryset=FavoriteRecipe.objects.all(),
-                fields=('user', 'recipe')
+                fields=('user', 'recipe'),
+                message='Рецепт уже в избранных',
             )
         ]
 
     def to_representation(self, instance):
-        pass
-        
+        recipe = instance.recipe
+        favorite = FavoriteOrShoppingSerializer(
+            recipe,
+        ).data
+        return favorite
+
+
+class ShoppingSerializer(FavoriteSerializer):
+
+    class Meta(FavoriteSerializer.Meta):
+        model = UserRecipeShoppingCart
+        validators = [
+            UniqueTogetherValidator(
+                queryset=FavoriteRecipe.objects.all(),
+                fields=('user', 'recipe'),
+                message='Рецепт уже в корзине',
+            )
+        ]
+
