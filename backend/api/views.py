@@ -25,8 +25,8 @@ from users.models import CustomUser
 from .utils import (
     check_and_add,
     check_and_delete_from_favorite,
-    check_and_add_to_cart,
-    check_and_delete_from_cart
+    check_and_delete_from_cart,
+    get_shopping_list
 )
 
 
@@ -38,16 +38,31 @@ class RecipeFilter(filters.FilterSet):
         field_name='is_favorited',
         method='filter_is_favorited',
     )
+    is_in_shopping_cart = filters.BooleanFilter(
+        field_name='is_in_shopping_cart',
+        method='filter_is_in_shopping_cart'
+    )
 
     class Meta:
         model = Recipe
-        fields = ('author', 'tags',)
+        fields = (
+            'author',
+            'tags',
+        )
 
     def filter_is_favorited(self, queryset, name, value):
         user = self.request.user
-        if value is True:
-            return user.favorited.all()
-        return queryset.exclude(is_favorited=user)
+        if value is True and user.is_authenticated:
+            return queryset.filter(is_favorited=user)
+        elif value is False and user.is_authenticated:
+            return queryset.exclude(is_favorited=user)
+        return queryset
+
+    def filter_is_in_shopping_cart(self, queryset, name, value):
+        user = self.request.user
+        if value is True and user.is_authenticated:
+            return queryset.filter(is_in_shopping_cart=user)
+        return queryset
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -69,9 +84,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         'ingredients',
         'tags',
     ). select_related('author')
-    pagination_class = pagination.PageNumberPagination
     filterset_class = RecipeFilter
-    pagination_class = pagination.LimitOffsetPagination
     permission_classes = (AuthorAdminOrReadOnly,)
 
     def create(self, request, *args, **kwargs):
@@ -127,7 +140,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if request.method == 'DELETE':
             return check_and_delete_from_cart(request, recipe)
 
-
     @action(
         ['GET'],
         detail=True,
@@ -146,6 +158,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
             {'short-link': f'{domain}/s/{short_link_url}'},
             status=status.HTTP_200_OK
         )
+
+    @action(
+        ['GET'],
+        detail=False,
+        url_path='download_shopping_cart',
+    )
+    def download_shopping_cart(self, request):
+        return get_shopping_list(request)
 
 
 class RecipeRedirectApiView(views.APIView):
