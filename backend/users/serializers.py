@@ -1,10 +1,10 @@
 import base64
 
+from api.base_serializers import BaseRecipeSerializer
 from django.core.files.base import ContentFile
 from djoser.serializers import UserSerializer
 from rest_framework import serializers
 
-from api.base_serializers import BaseRecipeSerializer
 from users.models import CustomUser
 
 

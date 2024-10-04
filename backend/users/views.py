@@ -1,10 +1,10 @@
+from api.permissions import (AuthenticatedOrReadOnlyRequest,
+                             AuthorAdminOrReadOnly)
 from djoser.views import UserViewSet
 from rest_framework import pagination, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from api.permissions import (AuthenticatedOrReadOnlyRequest,
-                             AuthorAdminOrReadOnly)
 from users.models import CustomUser, Subscription
 
 from .serializers import (CustomUserSerializer, GetSubscriptionsSerializer,
