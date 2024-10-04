@@ -1,33 +1,18 @@
-from django.urls import reverse
 from django.shortcuts import get_object_or_404, redirect
-from rest_framework import (
-    viewsets,
-    status,
-    response,
-    pagination,
-    views,
-    exceptions
-)
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.decorators import action
+from django.urls import reverse
 from django_filters import rest_framework as filters
+from rest_framework import exceptions, response, status, views, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 
-from .permissions import AuthorAdminOrReadOnly, AuthenticatedOrReadOnlyRequest
-from .models import Tag, Ingredient, Recipe
-from .serializers import (
-    FavoriteSerializer,
-    TagSerializer,
-    IngredientSerializer,
-    RecipeSerializer,
-    ShoppingSerializer,
-)
 from users.models import CustomUser
-from .utils import (
-    check_and_add,
-    check_and_delete_from_favorite,
-    check_and_delete_from_cart,
-    get_shopping_list
-)
+
+from .models import Ingredient, Recipe, Tag
+from .permissions import AuthenticatedOrReadOnlyRequest, AuthorAdminOrReadOnly
+from .serializers import (FavoriteSerializer, IngredientSerializer,
+                          RecipeSerializer, ShoppingSerializer, TagSerializer)
+from .utils import (check_and_add, check_and_delete_from_cart,
+                    check_and_delete_from_favorite, get_shopping_list)
 
 
 class RecipeFilter(filters.FilterSet):
@@ -54,7 +39,7 @@ class RecipeFilter(filters.FilterSet):
         user = self.request.user
         if value is True and user.is_authenticated:
             return queryset.filter(is_favorited=user)
-        elif value is False and user.is_authenticated:
+        if value is False and user.is_authenticated:
             return queryset.exclude(is_favorited=user)
         return queryset
 
@@ -121,6 +106,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return check_and_delete_from_favorite(
                 request, recipe
             )
+        return response.Response(
+            {'detail': 'Метод запроса запрещен.'},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
     @action(
         ['POST', 'DELETE'],
@@ -139,6 +128,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         if request.method == 'DELETE':
             return check_and_delete_from_cart(request, recipe)
+        return response.Response(
+            {'detail': 'Метод запроса запрещен.'},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
     @action(
         ['GET'],

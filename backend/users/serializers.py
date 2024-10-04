@@ -1,15 +1,11 @@
-from rest_framework import serializers
-from users.models import CustomUser, Subscription
-from django.contrib.auth.hashers import make_password
 import base64
+
 from django.core.files.base import ContentFile
 from djoser.serializers import UserSerializer
-from djoser.views import UserViewSet
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import serializers
 
 from api.base_serializers import BaseRecipeSerializer
+from users.models import CustomUser
 
 
 class Base64ImageField(serializers.ImageField):
@@ -71,7 +67,9 @@ class UserAvatarSerializer(UserSerializer):
 
     def validate(self, attrs):
         if 'avatar' not in attrs:
-            raise serializers.ValidationError({'detail': 'Файл аватарки не был передан.'})
+            raise serializers.ValidationError(
+                {'detail': 'Файл аватарки не был передан.'}
+            )
         return attrs
 
 

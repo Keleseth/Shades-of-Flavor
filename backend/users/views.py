@@ -1,13 +1,15 @@
 from djoser.views import UserViewSet
-from users.models import CustomUser, Subscription
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
-from rest_framework.response import Response
-from rest_framework import status, pagination
+from rest_framework import pagination, status
 from rest_framework.decorators import action
+from rest_framework.response import Response
 
-from .serializers import UserAvatarSerializer, CustomUserSerializer, GetSubscriptionsSerializer
+from api.permissions import (AuthenticatedOrReadOnlyRequest,
+                             AuthorAdminOrReadOnly)
+from users.models import CustomUser, Subscription
+
+from .serializers import (CustomUserSerializer, GetSubscriptionsSerializer,
+                          UserAvatarSerializer)
 from .validators import subscription_creatable
-from api.permissions import AuthorAdminOrReadOnly, AuthenticatedOrReadOnlyRequest
 
 
 class CustomUserViewSet(UserViewSet):
@@ -113,3 +115,7 @@ class CustomUserViewSet(UserViewSet):
                 subscribers=user
             ).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {'detail': 'Метод запроса запрещен.'},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )

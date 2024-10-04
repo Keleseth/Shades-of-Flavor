@@ -1,11 +1,10 @@
-import io
+from collections import defaultdict
 
 from django.db.models import Sum
 from django.http import HttpResponse
-from collections import defaultdict
 from rest_framework import response, status
 
-from .models import RecipeIngredient, Recipe
+from .models import Recipe, RecipeIngredient
 
 
 def check_and_add(request, object, serializer_class):
@@ -77,5 +76,7 @@ def get_shopping_list(request):
         shopping_list += f'{ingredient} ({measurement_unit}) - {amount}\n'
 
     shopping_file = HttpResponse(shopping_list, content_type='text/plain')
-    shopping_file['Content-Disposition'] = 'attachment; filename="shopping_cart.txt"'
+    shopping_file['Content-Disposition'] = (
+        'attachment; filename="shopping_cart.txt"'
+    )
     return shopping_file

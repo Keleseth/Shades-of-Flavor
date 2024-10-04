@@ -1,10 +1,11 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from .models import Tag, Ingredient, Recipe, RecipeIngredient, FavoriteRecipe, UserRecipeShoppingCart
 from users.serializers import Base64ImageField, CustomUserSerializer
 
 from .base_serializers import BaseRecipeSerializer
+from .models import (FavoriteRecipe, Ingredient, Recipe, RecipeIngredient, Tag,
+                     UserRecipeShoppingCart)
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -31,6 +32,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     """Сериализатор промежуточной модели между рецептами и ингредиентами."""
+
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all(),
     )
@@ -204,10 +206,9 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         recipe = instance.recipe
-        favorite = FavoriteOrShoppingSerializer(
+        return FavoriteOrShoppingSerializer(
             recipe,
         ).data
-        return favorite
 
 
 class ShoppingSerializer(FavoriteSerializer):
