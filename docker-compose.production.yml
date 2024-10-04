@@ -30,6 +30,9 @@ services:
   nginx:
     container_name: foodgram-proxy
     image: keleseth/foodgram_nginx
+    depends_on:
+      - frontend
+    env_file: .env
     ports:
       - "8001:80"
     volumes:
