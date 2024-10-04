@@ -4,6 +4,7 @@ from django_filters import rest_framework as filters
 from rest_framework import exceptions, response, status, views, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+
 from users.models import CustomUser
 
 from .models import Ingredient, Recipe, Tag
