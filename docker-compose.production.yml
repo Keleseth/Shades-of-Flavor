@@ -16,6 +16,9 @@ services:
   backend:
     container_name: foodgram-backend
     image: keleseth/foodgram_backend
+    depends_on:
+      - db
+    env_file: .env
     volumes:
       - static:/backend_static/
       - media:/media/
