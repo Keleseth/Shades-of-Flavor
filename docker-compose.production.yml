@@ -25,6 +25,8 @@ services:
   frontend:
     container_name: foodgram-front
     image: keleseth/foodgram_frontend
+    depends_on:
+      - backend
     volumes:
       - ../frontend/:/app/result_build/
   nginx:
