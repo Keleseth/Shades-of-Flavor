@@ -1,9 +1,10 @@
-name: Main Kittygram workflow
+name: Main Foodgram workflow
 
 on:
   push:
     branches:
       - main
+      - develop
 
 jobs:
   backend_tests:
@@ -29,6 +30,14 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: 3.9
+
+    # - name: Cache pip
+    #   uses: actions/cache@v3
+    #   with:
+    #     path: ~/.cache/pip
+    #     key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+    #     restore-keys: |
+    #       ${{ runner.os }}-pip-
     
     - name: Install dependencies
       run: |
@@ -59,6 +68,14 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-docker-
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       
@@ -73,7 +90,7 @@ jobs:
         with:
           context: ./backend/
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/kittygram_backend:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_backend:latest
 
 
   frontend_tests:
@@ -109,6 +126,14 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v3
 
+      - name: Cache Docker image-layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-docker-
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
@@ -123,7 +148,7 @@ jobs:
         with:
           context: ./frontend/
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/kittygram_frontend:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_frontend:latest
 
 
   build_gateway_and_push_to_docker_hub:
@@ -149,7 +174,7 @@ jobs:
         with:
           context: ./nginx/
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/kittygram_gateway:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_gateway:latest
 
 
   deploy:
@@ -171,7 +196,7 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         source: "docker-compose.production.yml"
-        target: "kittygram"
+        target: "foodgram"
 
     - name: Executing remote ssh commands to deploy
       uses: appleboy/ssh-action@master
@@ -181,7 +206,7 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         script: |
-          cd kittygram
+          cd foodgram
           sudo docker compose -f docker-compose.production.yml pull
           sudo docker compose -f docker-compose.production.yml down
           sudo docker compose -f docker-compose.production.yml up -d
@@ -200,4 +225,4 @@ jobs:
       with:
         to: ${{ secrets.TELEGRAM_TO }}
         token: ${{ secrets.TELEGRAM_TOKEN }}
-        message: Деплой проекта kittygram выполнен, ура!
+        message: Деплой проекта foodgram(shades of flavor) выполнен!

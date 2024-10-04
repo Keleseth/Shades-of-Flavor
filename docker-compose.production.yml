@@ -6,20 +6,26 @@ volumes:
 
 services:
 
+  db:
+    image: postgres:13
+    env_file: .env
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
   backend:
     container_name: foodgram-backend
-    build: ../backend
+    image: keleseth/foodgram_backend
     volumes:
       - static:/backend_static/
       - media:/media/
   frontend:
     container_name: foodgram-front
-    build: ../frontend
+    image: keleseth/foodgram_frontend
     volumes:
       - ../frontend/:/app/result_build/
   nginx:
     container_name: foodgram-proxy
-    image: nginx:1.25.4-alpine
+    image: keleseth/foodgram_nginx
     ports:
       - "8001:80"
     volumes:
