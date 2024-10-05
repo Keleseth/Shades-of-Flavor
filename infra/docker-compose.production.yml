@@ -31,8 +31,8 @@ services:
       - ../frontend/:/app/result_build/
   nginx:
     container_name: foodgram-proxy
-    # image: keleseth/foodgram_gateway
-    build: .
+    image: keleseth/foodgram_gateway
+    # build: .
     depends_on:
       - frontend
     env_file: ../.env
@@ -44,4 +44,3 @@ services:
       - ../docs/:/usr/share/nginx/html/api/docs/
       - static_foodgram:/static/
       - media_foodgram:/media/
-
