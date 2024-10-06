@@ -48,7 +48,7 @@ class RecipeAdmin(admin.ModelAdmin):
     ]
     empty_value_display = settings.EMPTY_FIELD
 
-    def count_obj_favorites(self, obj):
+    def count_favorites(self, obj):
         return obj.favorites.count()
 
 

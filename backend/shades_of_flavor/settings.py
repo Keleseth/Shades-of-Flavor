@@ -151,8 +151,8 @@ DJOSER = {
         'current_user': 'users.serializers.CustomUserSerializer',
     },
     'PERMISSIONS': {
-        'user_list': ['api.permissions.AuthorAdminOrReadOnly'],
-        'user': ['api.permissions.AuthorAdminOrReadOnly'],
+        'user_list': ['core.permissions.AuthorAdminOrReadOnly'],
+        'user': ['core.permissions.AuthorAdminOrReadOnly'],
     }
 }
 
