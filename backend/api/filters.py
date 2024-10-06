@@ -1,11 +1,27 @@
 from django_filters import rest_framework as filters
 
-from api.models import Recipe
+from api.models import Recipe, Ingredient
 from users.models import CustomUser
 
 
+class IngredientFilter(filters.FilterSet):
+    """Кастомная Фильтрация тегов"""
+
+    name = filters.CharFilter(
+        lookup_expr='istartswith',
+        help_text=(
+            'Регистронезависимая фильтрация ингредиентов по названию '
+            'начиная с указанных в запросе символов'
+        )
+    )
+
+    class Meta:
+        model = Ingredient
+        fields = ('name',)
+
+
 class RecipeFilter(filters.FilterSet):
-    """Кастомный класс фильтрации запросов."""
+    """Кастомная фильтрации рецептов."""
 
     author = filters.ModelChoiceFilter(queryset=CustomUser.objects.all())
     tags = filters.AllValuesMultipleFilter(field_name='tags__slug')

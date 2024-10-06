@@ -4,8 +4,7 @@ from rest_framework import exceptions, response, status, views, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from core.filters import RecipeFilter
-
+from .filters import RecipeFilter, IngredientFilter
 from .models import Ingredient, Recipe, Tag
 from core.permissions import (
     AuthenticatedOrReadOnlyRequest,
@@ -31,6 +30,7 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (AllowAny,)
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
+    filterset_class = IngredientFilter
     pagination_class = None
 
 
