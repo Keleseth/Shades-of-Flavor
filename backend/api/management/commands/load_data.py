@@ -24,7 +24,8 @@ class Command(BaseCommand):
         model_name = kwargs['model_to_load']
 
         try:
-            Model = apps.get_model('your_app', model_name)
+            app_label, model_name = model_name.split(".")
+            Model = apps.get_model(app_label, model_name)
         except LookupError:
             self.stdout.write(
                 self.style.ERROR(f'Модель "{model_name}" не найдена.')
