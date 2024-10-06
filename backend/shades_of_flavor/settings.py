@@ -136,7 +136,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAdminUser',
     ],
 
     'DEFAULT_PAGINATION_CLASS': 'core.pagination.LimitNumberPagination',
@@ -160,6 +160,8 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+EMPTY_FIELD = 'пусто'
 
 # LOGGING = {
 #     'version': 1,

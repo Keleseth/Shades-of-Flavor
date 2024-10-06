@@ -101,6 +101,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 
 class Subscription(models.Model):
+    """Модель подписок."""
+
     subscriptions = models.ForeignKey(
         CustomUser,
         related_name='subscriptions',

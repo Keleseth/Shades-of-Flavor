@@ -4,6 +4,7 @@ from .models import Recipe
 
 
 class BaseRecipeSerializer(serializers.ModelSerializer):
+    """Базовый сериализатор для представления рецепта."""
 
     class Meta:
         model = Recipe

@@ -3,16 +3,22 @@ from rest_framework import pagination, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from api.permissions import (AuthenticatedOrReadOnlyRequest,
-                             AuthorAdminOrReadOnly)
+from core.permissions import (
+    AuthenticatedOrReadOnlyRequest,
+    AuthorAdminOrReadOnly
+)
 from users.models import CustomUser, Subscription
 
-from .serializers import (CustomUserSerializer, GetSubscriptionsSerializer,
-                          UserAvatarSerializer)
+from .serializers import (
+    CustomUserSerializer,
+    GetSubscriptionsSerializer,
+    UserAvatarSerializer
+)
 from .validators import subscription_creatable
 
 
 class CustomUserViewSet(UserViewSet):
+    """Вьюсет пользователей."""
 
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer

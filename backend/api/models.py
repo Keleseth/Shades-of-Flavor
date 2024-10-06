@@ -114,8 +114,9 @@ class Recipe(models.Model):
         verbose_name='теги',
     )
     pub_date = models.DateTimeField(
-        'Дата публикации',
         auto_now_add=True,
+        db_index=True,
+        verbose_name='Дата публикации',
     )
     is_in_shopping_cart = models.ManyToManyField(
         CustomUser,
@@ -142,7 +143,7 @@ class Recipe(models.Model):
     class Meta:
         verbose_name = 'рецепт'
         verbose_name_plural = 'Рецепты'
-        ordering = ('name',)
+        ordering = ('-pub_date',)
 
 
 class RecipeIngredient(models.Model):
@@ -167,6 +168,8 @@ class RecipeIngredient(models.Model):
 
 
 class FavoriteRecipe(models.Model):
+    """Модель для любимых рецептов пользователей."""
+
     user = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,
@@ -192,6 +195,8 @@ class FavoriteRecipe(models.Model):
 
 
 class UserRecipeShoppingCart(models.Model):
+    """Модель корзины покупок для пользователей."""
+
     user = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,

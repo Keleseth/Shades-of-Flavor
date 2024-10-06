@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from users.serializers import Base64ImageField, CustomUserSerializer
+from users.serializers import CustomUserSerializer
+from users.utils import Base64ImageField
 
 from .base_serializers import BaseRecipeSerializer
 from .models import (FavoriteRecipe, Ingredient, Recipe, RecipeIngredient, Tag,
@@ -9,14 +10,11 @@ from .models import (FavoriteRecipe, Ingredient, Recipe, RecipeIngredient, Tag,
 
 
 class TagSerializer(serializers.ModelSerializer):
+    """Сериализатор тегов."""
 
     class Meta:
         model = Tag
-        fields = (
-            'id',
-            'name',
-            'slug'
-        )
+        fields = '__all__'
         read_only_fields = (
             'name',
             'slug',
@@ -24,6 +22,7 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class IngredientSerializer(serializers.ModelSerializer):
+    """Сериализатор ингредиентов."""
 
     class Meta:
         model = Ingredient
@@ -56,6 +55,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(BaseRecipeSerializer):
+    """Сериализатор рецептов."""
 
     author = CustomUserSerializer(read_only=True)
     image = Base64ImageField(required=True, allow_null=False)
@@ -177,6 +177,7 @@ class RecipeSerializer(BaseRecipeSerializer):
 
 
 class FavoriteOrShoppingSerializer(serializers.ModelSerializer):
+    """Сериализатор ответа для: избранных рецептов и корзины покупок."""
 
     class Meta:
         model = Recipe
@@ -189,6 +190,7 @@ class FavoriteOrShoppingSerializer(serializers.ModelSerializer):
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
+    """Сериализатор избранных рецептов."""
 
     class Meta:
         model = FavoriteRecipe
@@ -212,6 +214,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
 
 class ShoppingSerializer(FavoriteSerializer):
+    """Сериализатор корзины покупок."""
 
     class Meta(FavoriteSerializer.Meta):
         model = UserRecipeShoppingCart

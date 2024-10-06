@@ -1,68 +1,41 @@
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
-from django_filters import rest_framework as filters
 from rest_framework import exceptions, response, status, views, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from users.models import CustomUser
+from core.filters import RecipeFilter
 
 from .models import Ingredient, Recipe, Tag
-from .permissions import AuthenticatedOrReadOnlyRequest, AuthorAdminOrReadOnly
+from core.permissions import (
+    AuthenticatedOrReadOnlyRequest,
+    AuthorAdminOrReadOnly
+)
 from .serializers import (FavoriteSerializer, IngredientSerializer,
                           RecipeSerializer, ShoppingSerializer, TagSerializer)
 from .utils import (check_and_add, check_and_delete_from_cart,
                     check_and_delete_from_favorite, get_shopping_list)
 
 
-class RecipeFilter(filters.FilterSet):
-
-    author = filters.ModelChoiceFilter(queryset=CustomUser.objects.all())
-    tags = filters.AllValuesMultipleFilter(field_name='tags__slug')
-    is_favorited = filters.BooleanFilter(
-        field_name='is_favorited',
-        method='filter_is_favorited',
-    )
-    is_in_shopping_cart = filters.BooleanFilter(
-        field_name='is_in_shopping_cart',
-        method='filter_is_in_shopping_cart'
-    )
-
-    class Meta:
-        model = Recipe
-        fields = (
-            'author',
-            'tags',
-        )
-
-    def filter_is_favorited(self, queryset, name, value):
-        user = self.request.user
-        if value is True and user.is_authenticated:
-            return queryset.filter(is_favorited=user)
-        if value is False and user.is_authenticated:
-            return queryset.exclude(is_favorited=user)
-        return queryset
-
-    def filter_is_in_shopping_cart(self, queryset, name, value):
-        user = self.request.user
-        if value is True and user.is_authenticated:
-            return queryset.filter(is_in_shopping_cart=user)
-        return queryset
-
-
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
+    """Вьюсет тегов."""
+
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
     pagination_class = None
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
+    """Вьюсет ингредиентов."""
+
+    permission_classes = (AllowAny,)
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
     pagination_class = None
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
+    """Вьюсет рецептов."""
 
     serializer_class = RecipeSerializer
     queryset = Recipe.objects.all().prefetch_related(
@@ -71,6 +44,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     ). select_related('author')
     filterset_class = RecipeFilter
     permission_classes = (AuthorAdminOrReadOnly,)
+    ordering_fields = ('name', 'created_at')
+    ordering = ('created_at', 'name',)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -162,6 +137,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 
 class RecipeRedirectApiView(views.APIView):
+    """Вью редиректра по короткой ссылке."""
+
+    permission_classes = (AllowAny,)
+
     def get(self, request, *args, **kwargs):
         link = kwargs.get('short_link')
         recipe = get_object_or_404(

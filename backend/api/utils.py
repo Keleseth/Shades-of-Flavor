@@ -8,6 +8,10 @@ from .models import Recipe, RecipeIngredient
 
 
 def check_and_add(request, object, serializer_class):
+    """
+    Фунция выполняет проверки через переданный сериализатор,
+    сохраняет объект и возвращает объект сериализатора.
+    """
     user = request.user
     serializer = serializer_class(
         data={
@@ -25,6 +29,10 @@ def check_and_add(request, object, serializer_class):
 
 
 def check_and_delete_from_favorite(request, object):
+    """
+    Фунция выполняет проверку на существование связующей записи
+    модели FavoriteRecipe и удаляет его.
+    """
     user = request.user
     if not user.favorited.filter(id=object.id).exists():
         return response.Response(
@@ -36,6 +44,10 @@ def check_and_delete_from_favorite(request, object):
 
 
 def check_and_delete_from_cart(request, object):
+    """
+    Фунция выполняет проверку на существование связующей записи
+    модели UserRecipeShoppingCart и удаляет его.
+    """
     user = request.user
     if not user.recipes_in_cart.filter(id=object.id).exists():
         return response.Response(

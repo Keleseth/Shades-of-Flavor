@@ -1,26 +1,14 @@
-import base64
-
-from django.core.files.base import ContentFile
 from djoser.serializers import UserSerializer
 from rest_framework import serializers
 
 from api.base_serializers import BaseRecipeSerializer
 
 from .models import CustomUser
-
-
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-
-        return super().to_internal_value(data)
+from .utils import Base64ImageField
 
 
 class BaseCustomUserSerializer(UserSerializer):
+    """Базовый сериализатор юзеров."""
 
     avatar = Base64ImageField(required=False, allow_null=True)
     is_subscribed = serializers.SerializerMethodField(read_only=True)
@@ -47,6 +35,7 @@ class BaseCustomUserSerializer(UserSerializer):
 
 
 class CustomUserSerializer(BaseCustomUserSerializer):
+    """Сериализатор юзеров для регистрации с полем password."""
 
     class Meta(BaseCustomUserSerializer.Meta):
         fields = BaseCustomUserSerializer.Meta.fields + ['password']
@@ -57,6 +46,8 @@ class CustomUserSerializer(BaseCustomUserSerializer):
 
 
 class UserAvatarSerializer(UserSerializer):
+    """Сериализатор для обработки аватаров пользователей."""
+
     avatar = Base64ImageField(required=False, allow_null=True)
     # is_subscribed = serializers.SerializerMethodField()
 
@@ -75,6 +66,7 @@ class UserAvatarSerializer(UserSerializer):
 
 
 class GetSubscriptionsSerializer(BaseCustomUserSerializer):
+    """Сериализатор для подписок."""
 
     recipes = BaseRecipeSerializer(
         read_only=True,
