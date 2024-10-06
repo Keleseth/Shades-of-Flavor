@@ -32,7 +32,9 @@ class Command(BaseCommand):
             )
             return
 
-        model_fields = [field.name for field in Model._meta.fields]
+        model_fields = [
+            field.name for field in Model._meta.fields if field.name != 'id'
+        ]
 
         try:
             with open(csv_file, newline='', encoding='utf-8') as file:
