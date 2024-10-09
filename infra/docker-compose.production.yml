@@ -9,7 +9,7 @@ services:
 
   db:
     image: postgres:13
-    env_file: ../.env
+    env_file: .env
     volumes:
       - pg_data_foodgram:/var/lib/postgresql/data
 
@@ -18,7 +18,7 @@ services:
     image: keleseth/foodgram_backend
     depends_on:
       - db
-    env_file: ../.env
+    env_file: .env
     volumes:
       - static_foodgram:/backend_static/
       - media_foodgram:/media/
@@ -34,7 +34,7 @@ services:
     image: keleseth/foodgram_gateway
     depends_on:
       - frontend
-    env_file: ../.env
+    env_file: .env
     ports:
       - "8001:80"
     volumes:
