@@ -96,13 +96,13 @@ class RecipeSerializer(BaseRecipeSerializer):
         return recipe_representation
 
     def get_is_favorited(self, obj):
-        user = self.context.get('request').user
+        user = self.context['request'].user
         if user.is_authenticated:
             return obj.is_favorited.filter(id=user.id).exists()
         return False
 
     def get_is_in_shopping_cart(self, obj):
-        user = self.context.get('request').user
+        user = self.context['request'].user
         if user.is_authenticated:
             return user.recipes_in_cart.filter(id=obj.id).exists()
         return False

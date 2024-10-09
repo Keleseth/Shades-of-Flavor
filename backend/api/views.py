@@ -19,6 +19,7 @@ from .utils import (check_and_add, check_and_delete_from_cart,
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     """Вьюсет тегов."""
 
+    permission_classes = (AllowAny,)
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
     pagination_class = None

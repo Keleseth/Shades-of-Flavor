@@ -105,8 +105,7 @@ class CustomUserViewSet(UserViewSet):
                 context={'request': request}
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        # Хотя это и необязательное условие, я предпочитаю добавлять такие
-        # строки для ясности.
+
         if request.method == 'DELETE':
             if not Subscription.objects.filter(
                 subscriptions=subscribed_user,

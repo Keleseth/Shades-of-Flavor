@@ -70,14 +70,15 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         null=True,
         default=None,
     )
-    # groups = models.ManyToManyField( TODO
-    #     related_name='groups',
-    #     verbose_name='Роль'
-    # )
     is_superuser = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'пользователя'
+        verbose_name_plural = 'Пользователи'
+        ordering = ('username',)
 
     objects = CustomManager()
 
@@ -93,11 +94,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     @property
     def is_admin(self):
         return self.is_staff is True
-
-    class Meta:
-        verbose_name = 'пользователя'
-        verbose_name_plural = 'Пользователи'
-        ordering = ('username',)
 
 
 class Subscription(models.Model):
@@ -115,11 +111,6 @@ class Subscription(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def save(self, *args, **kwargs):
-        if self.subscriptions == self.subscribers:
-            raise ValueError("Нельзя подписываться на себя.")
-        super().save(*args, **kwargs)
-
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -127,3 +118,14 @@ class Subscription(models.Model):
                 name='unique_subs'
             )
         ]
+
+    def save(self, *args, **kwargs):
+        if self.subscriptions == self.subscribers:
+            raise ValueError("Нельзя подписываться на себя.")
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return (
+            f'пользователь {self.subscribers.username} подписан на '
+            f'пользователя {self.subscriptions.username}'
+        )

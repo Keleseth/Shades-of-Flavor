@@ -1,25 +1,12 @@
 import uuid
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.text import slugify
 
 CustomUser = get_user_model()
-
-
-# class IngredientManagerCSV(models.BaseManager):
-#     def load_csv_data(self, csv_file_path):
-#         with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
-#             reader = csv.reader(csvfile)
-#             ingredients = []
-#             for row in reader:
-#                 if len(row) == 2:
-#                     name = row[0].strip()
-#                     unit = row[1].strip()
-#                     ingredient = self.model(name=name, unit=unit)
-#                     ingredients.append(ingredient)
-#             self.bulk_create(ingredients)
 
 
 class Tag(models.Model):
@@ -41,14 +28,17 @@ class Tag(models.Model):
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 
-    # csv_manager = IngredientManagerCSV
+    class Meta:
+        verbose_name = 'ингредиент'
+        verbose_name_plural = 'Ингредиенты'
+        ordering = ('name',)
+
+    def __str__(self) -> str:
+        return self.name
 
 
 class Ingredient(models.Model):
     """Модель ингредиентов."""
-
-    # MEASURE_UNITS = [ TODO
-    # ]
 
     name = models.CharField(
         max_length=128,
@@ -61,13 +51,13 @@ class Ingredient(models.Model):
         verbose_name='ед. измерения'
     )
 
-    def __str__(self) -> str:
-        return self.name
-
     class Meta:
         verbose_name = 'ингредиент'
         verbose_name_plural = 'Ингредиенты'
         ordering = ('name',)
+
+    def __str__(self) -> str:
+        return self.name
 
 
 class Recipe(models.Model):
@@ -95,10 +85,10 @@ class Recipe(models.Model):
     image = models.ImageField(
         upload_to='recipes/images/'
     )
-    cooking_time = models.PositiveIntegerField(
+    cooking_time = models.PositiveSmallIntegerField(
         validators=[
-            MinValueValidator(1),
-            MaxValueValidator(9999),
+            MinValueValidator(settings.POSITIVE_SMALL_INTEGER_MIN),
+            MaxValueValidator(settings.POSITIVE_SMALL_INTEGER_MAX),
         ],
         verbose_name='время приготовления',
     )
@@ -132,6 +122,11 @@ class Recipe(models.Model):
         verbose_name='короткая ссылка',
     )
 
+    class Meta:
+        verbose_name = 'рецепт'
+        verbose_name_plural = 'Рецепты'
+        ordering = ('-pub_date',)
+
     def __str__(self) -> str:
         return self.name
 
@@ -139,11 +134,6 @@ class Recipe(models.Model):
         if not self.short_link:
             self.short_link = uuid.uuid4().hex[:9]
         super().save(*args, **kwargs)
-
-    class Meta:
-        verbose_name = 'рецепт'
-        verbose_name_plural = 'Рецепты'
-        ordering = ('-pub_date',)
 
 
 class RecipeIngredient(models.Model):
@@ -159,12 +149,23 @@ class RecipeIngredient(models.Model):
         on_delete=models.CASCADE,
         related_name='ingredient_recipes',
     )
-    amount = models.IntegerField(
-        validators=[MinValueValidator(1)],
+    amount = models.PositiveSmallIntegerField(
+        MinValueValidator(settings.POSITIVE_SMALL_INTEGER_MIN),
+        MaxValueValidator(settings.POSITIVE_SMALL_INTEGER_MAX),
     )
 
     class Meta:
-        unique_together = ('recipe', 'ingredient')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='unique_recipe_in_cart',
+            )
+        ]
+        verbose_name = 'ингредиент для рецепта'
+        verbose_name_plural = 'Ингредиенты для рецепта'
+
+    def __str__(self) -> str:
+        return f'{self.ingredient.name} для рецепта: {self.recipe.name}'
 
 
 class FavoriteRecipe(models.Model):
@@ -193,6 +194,12 @@ class FavoriteRecipe(models.Model):
         verbose_name = 'избранный рецепт'
         verbose_name_plural = 'Избранные рецепты'
 
+    def __str__(self) -> str:
+        return (
+            f'Любимый рецепт пользователя {self.user.username}: '
+            f'{self.recipe.name}'
+        )
+
 
 class UserRecipeShoppingCart(models.Model):
     """Модель корзины покупок для пользователей."""
@@ -219,3 +226,9 @@ class UserRecipeShoppingCart(models.Model):
         ]
         verbose_name = 'рецепт в корзине'
         verbose_name_plural = 'Рецепты в корзине'
+
+    def __str__(self) -> str:
+        return (
+            f'Рецепт: {self.recipe.name} в корзине пользователя '
+            f'{self.user.username}: '
+        )
