@@ -25,7 +25,7 @@ class BaseCustomUserSerializer(UserSerializer):
         ]
 
     def get_is_subscribed(self, obj):
-        request = self.context.get('request')
+        request = self.context['request']
         if request.user.is_authenticated:
             return obj.subscriptions.filter(
                 subscribers=request.user
@@ -48,7 +48,6 @@ class UserAvatarSerializer(UserSerializer):
     """Сериализатор для обработки аватаров пользователей."""
 
     avatar = Base64ImageField(required=False, allow_null=True)
-    # is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser

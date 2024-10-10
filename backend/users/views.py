@@ -89,9 +89,9 @@ class CustomUserViewSet(UserViewSet):
         detail=True,
         url_path='subscribe',
     )
-    def add_delete_subscription(self, request, *args, **kwargs):
+    def add_delete_subscription(self, request, *args, **kwargs)-> Response:
         user = request.user
-        subscribed_user_id = kwargs.get('id')
+        subscribed_user_id = kwargs['id']
         subscribed_user = subscription_creatable(user, subscribed_user_id)
         if request.method == 'POST':
             if user.subscribers.filter(subscriptions=subscribed_user).exists():
@@ -110,10 +110,7 @@ class CustomUserViewSet(UserViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         if request.method == 'DELETE':
-            if not Subscription.objects.filter(
-                subscriptions=subscribed_user,
-                subscribers=user
-            ).exists():
+            if not user.subscribers.filter(subscriptions=subscribed_user).exists():
                 return Response(
                     {'detail': 'Вы не подписаны на этого пользователя.'},
                     status=status.HTTP_400_BAD_REQUEST
@@ -123,7 +120,4 @@ class CustomUserViewSet(UserViewSet):
                 subscribers=user
             ).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {'detail': 'Метод запроса запрещен.'},
-            status=status.HTTP_405_METHOD_NOT_ALLOWED
-        )
+
