@@ -150,10 +150,6 @@ DJOSER = {
         'USER_VIEWSET': 'users.views.UserDjoserViewSet',
         'current_user': 'users.serializers.CustomUserSerializer',
     },
-    'PERMISSIONS': {
-        'user_list': ['core.permissions.AuthorAdminOrReadOnly'],
-        'user': ['core.permissions.AuthorAdminOrReadOnly'],
-    }
 }
 
 SIMPLE_JWT = {

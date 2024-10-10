@@ -29,8 +29,8 @@ class Tag(models.Model):
         super().save(*args, **kwargs)
 
     class Meta:
-        verbose_name = 'ингредиент'
-        verbose_name_plural = 'Ингредиенты'
+        verbose_name = 'Тег'
+        verbose_name_plural = 'Теги'
         ordering = ('name',)
 
     def __str__(self) -> str:
@@ -160,7 +160,7 @@ class RecipeIngredient(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['recipe', 'ingredient'],
-                name='unique_recipe_in_cart',
+                name='unique_ingredient_for_recipe',
             )
         ]
         verbose_name = 'ингредиент для рецепта'
