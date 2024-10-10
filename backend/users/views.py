@@ -5,7 +5,7 @@ from rest_framework.response import Response
 
 from core.permissions import (
     AuthenticatedOrReadOnlyRequest,
-    AuthorAdminOrReadOnly
+    IsAuthorAdminOrReadOnlyObject
 )
 from users.models import CustomUser, Subscription
 
@@ -22,7 +22,10 @@ class CustomUserViewSet(UserViewSet):
 
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
-    permission_classes = (AuthorAdminOrReadOnly,)
+    permission_classes = (
+        AuthenticatedOrReadOnlyRequest,
+        IsAuthorAdminOrReadOnlyObject
+    )
     pagination_class = pagination.PageNumberPagination
     pagination_class.page_size_query_param = 'limit'
 

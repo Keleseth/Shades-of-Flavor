@@ -92,3 +92,16 @@ def get_shopping_list(request):
         'attachment; filename="shopping_cart.txt"'
     )
     return shopping_file
+
+
+def create_recipeingredients(object, ingredients_data):
+    recipe_ingredient_list = []
+    for ingredient_unit in ingredients_data:
+        recipe_ingredient_list.append(
+            RecipeIngredient(
+                recipe=object,
+                ingredient=ingredient_unit['id'],
+                amount=ingredient_unit['amount'],
+            )
+        )
+    RecipeIngredient.objects.bulk_create(recipe_ingredient_list)

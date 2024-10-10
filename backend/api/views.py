@@ -8,7 +8,7 @@ from .filters import RecipeFilter, IngredientFilter
 from .models import Ingredient, Recipe, Tag
 from core.permissions import (
     AuthenticatedOrReadOnlyRequest,
-    AuthorAdminOrReadOnly
+    IsAuthorAdminOrReadOnlyObject
 )
 from .serializers import (FavoriteSerializer, IngredientSerializer,
                           RecipeSerializer, ShoppingSerializer, TagSerializer)
@@ -44,7 +44,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         'tags',
     ). select_related('author')
     filterset_class = RecipeFilter
-    permission_classes = (AuthorAdminOrReadOnly,)
+    permission_classes = (
+        AuthenticatedOrReadOnlyRequest,
+        IsAuthorAdminOrReadOnlyObject
+    )
     ordering_fields = ('name', 'created_at')
     ordering = ('created_at', 'name',)
 

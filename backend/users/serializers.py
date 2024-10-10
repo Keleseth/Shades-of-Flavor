@@ -2,9 +2,8 @@ from djoser.serializers import UserSerializer
 from rest_framework import serializers
 
 from api.base_serializers import BaseRecipeSerializer
-
-from .models import CustomUser
-from .utils import Base64ImageField
+from users.models import CustomUser
+from users.utils import Base64ImageField
 
 
 class BaseCustomUserSerializer(UserSerializer):

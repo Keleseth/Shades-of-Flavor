@@ -7,8 +7,6 @@ class AuthenticatedOrReadOnlyRequest(permissions.BasePermission):
     def has_permission(self, request, view):
         if (
             request.method not in permissions.SAFE_METHODS
-            # /me/ только для юзеров, разываюсь между созданием отдельных
-            # классов для recipe и прочих, и общим, но с /me/ для всех.
             or request.path.endswith('/me/')
         ):
             return request.user.is_authenticated
@@ -27,10 +25,3 @@ class IsAuthorAdminOrReadOnlyObject(permissions.BasePermission):
             )
         return True
 
-
-class AuthorAdminOrReadOnly(
-    AuthenticatedOrReadOnlyRequest,
-    IsAuthorAdminOrReadOnlyObject
-):
-    """Общий пермишен для рецептов и юзеров."""
-    pass

@@ -4,6 +4,7 @@ from rest_framework.validators import UniqueTogetherValidator
 from users.serializers import CustomUserSerializer
 from users.utils import Base64ImageField
 
+from .utils import create_recipeingredients
 from .base_serializers import BaseRecipeSerializer
 from .models import (FavoriteRecipe, Ingredient, Recipe, RecipeIngredient, Tag,
                      UserRecipeShoppingCart)
@@ -115,16 +116,7 @@ class RecipeSerializer(BaseRecipeSerializer):
             **validated_data,
         )
         recipe.tags.set(tags_data)
-        recipe_ingredient_list = []
-        for ingredient_unit in ingredients_data:
-            recipe_ingredient_list.append(
-                RecipeIngredient(
-                    recipe=recipe,
-                    ingredient=ingredient_unit['id'],
-                    amount=ingredient_unit['amount'],
-                )
-            )
-        RecipeIngredient.objects.bulk_create(recipe_ingredient_list)
+        create_recipeingredients(recipe, ingredients_data)
         recipe.is_favorited.add(user)
         return recipe
 
@@ -136,16 +128,7 @@ class RecipeSerializer(BaseRecipeSerializer):
             instance.tags.set(tags_data)
         if ingredients_data:
             instance.ingredients.clear()
-            recipe_ingredient_list = []
-            for ingredient_unit in ingredients_data:
-                recipe_ingredient_list.append(
-                    RecipeIngredient(
-                        recipe=instance,
-                        ingredient=ingredient_unit['id'],
-                        amount=ingredient_unit['amount'],
-                    )
-                )
-            RecipeIngredient.objects.bulk_create(recipe_ingredient_list)
+            create_recipeingredients(instance, ingredients_data)
 
         for field, value in validated_data.items():
             setattr(instance, field, value)
