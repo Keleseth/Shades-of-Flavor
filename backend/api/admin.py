@@ -35,19 +35,25 @@ class IngredientAdmin(admin.ModelAdmin):
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
+    # Отображаемые поля в списке рецептов в админке
     list_display = (
-        'id',
-        'name',
-        'author',
-        'count_favorites'
+        'id',  # Идентификатор рецепта
+        'name',  # Название рецепта
+        'author',  # Автор рецепта
+        'count_favorites'  # Количество пользователей, добавивших рецепт в избранное
     )
-    search_fields = ('name', 'author__username')
-    list_filter = ('tags',)
+    # Поля, по которым можно искать рецепты
+    search_fields = ('name', 'author__username')  # Поиск по названию рецепта и имени автора
+    # Фильтры в админке для удобства поиска рецептов по тегам
+    list_filter = ('tags',)  # Фильтр по тегам рецептов
+    # Встроенные записи для редактирования ингредиентов рецепта на странице рецепта
     inlines = [
-        RecipeIngredientInline,
+        RecipeIngredientInline,  # Позволяет редактировать ингредиенты прямо в рецепте
     ]
-    empty_value_display = settings.EMPTY_FIELD
+    # Отображение значения, если поле пустое
+    empty_value_display = settings.EMPTY_FIELD  # Заменяет пустые значения в админке на значение, указанное в настройках
 
+    # Метод для подсчета количества пользователей, добавивших рецепт в избранное
     def count_favorites(self, obj):
         return obj.favorites.count()
 

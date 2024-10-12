@@ -155,7 +155,12 @@ class RecipeIngredient(models.Model):
             MaxValueValidator(settings.POSITIVE_SMALL_INTEGER_MAX),
         ]
     )
-
+# Поле amount с валидаторами
+# PositiveSmallIntegerField: принимает только положительные целые числа.
+# validators: список валидаторов, которые проверяют значение поля.
+# - MinValueValidator: проверяет, что значение не меньше указанного минимума (берется из настроек).
+# - MaxValueValidator: проверяет, что значение не больше указанного максимума (берется из настроек).
+# Это позволяет ограничить значение поля 'amount' в определённом диапазоне и избежать некорректных данных.
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -165,6 +170,14 @@ class RecipeIngredient(models.Model):
         ]
         verbose_name = 'ингредиент для рецепта'
         verbose_name_plural = 'Ингредиенты для рецепта'
+
+# Атрибут constraints в Meta:
+# constraints: задаёт ограничения на уровне базы данных.
+# - UniqueConstraint: обеспечивает уникальность комбинации полей ('recipe' и 'ingredient').
+#   Это значит, что один и тот же ингредиент не может повторяться в одном и том же рецепте.
+# - name: задаёт имя ограничения в базе данных.
+# verbose_name и verbose_name_plural: задают человекочитаемые названия модели в единственном и множественном числе соответственно,
+#   которые будут отображаться в административной панели.
 
     def __str__(self) -> str:
         return f'{self.ingredient.name} для рецепта: {self.recipe.name}'
