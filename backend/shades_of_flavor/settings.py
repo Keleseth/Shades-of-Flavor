@@ -20,8 +20,6 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 AUTH_USER_MODEL = 'users.CustomUser'
 
 
-# Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -69,9 +67,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'shades_of_flavor.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
 if os.getenv('TEST_DB', False) == 'True':
     DATABASES = {
         'default': {
@@ -91,8 +86,6 @@ else:
         }
     }
 
-# Password validation
-# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
