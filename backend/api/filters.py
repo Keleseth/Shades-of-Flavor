@@ -1,6 +1,6 @@
 from django_filters import rest_framework as filters
 
-from api.models import Recipe, Ingredient
+from api.models import Ingredient, Recipe, Tag
 from users.models import CustomUser
 
 
@@ -24,7 +24,10 @@ class RecipeFilter(filters.FilterSet):
     """Кастомная фильтрации рецептов."""
 
     author = filters.ModelChoiceFilter(queryset=CustomUser.objects.all())
-    tags = filters.ModelMultipleChoiceFilter(field_name='tags__slug')
+    tags = filters.ModelMultipleChoiceFilter(
+        field_name='tags__slug',
+        queryset=Tag.objects.all()
+    )
     is_favorited = filters.BooleanFilter(
         field_name='is_favorited',
         method='filter_is_favorited',
