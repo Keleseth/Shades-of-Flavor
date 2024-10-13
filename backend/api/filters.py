@@ -24,7 +24,7 @@ class RecipeFilter(filters.FilterSet):
     """Кастомная фильтрации рецептов."""
 
     author = filters.ModelChoiceFilter(queryset=CustomUser.objects.all())
-    tags = filters.AllValuesMultipleFilter(field_name='tags__slug')
+    tags = filters.ModelMultipleChoiceFilter(field_name='tags__slug')
     is_favorited = filters.BooleanFilter(
         field_name='is_favorited',
         method='filter_is_favorited',

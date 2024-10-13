@@ -1,3 +1,4 @@
+from django.conf import settings
 from djoser.views import UserViewSet
 from rest_framework import pagination, status
 from rest_framework.decorators import action
@@ -8,13 +9,12 @@ from core.permissions import (
     IsAuthorAdminOrReadOnlyObject
 )
 from users.models import CustomUser, Subscription
-
-from .serializers import (
+from users.serializers import (
     CustomUserSerializer,
     GetSubscriptionsSerializer,
     UserAvatarSerializer
 )
-from .validators import subscription_creatable
+from users.utils import get_subscription_data
 
 
 class CustomUserViewSet(UserViewSet):
@@ -68,13 +68,13 @@ class CustomUserViewSet(UserViewSet):
         url_path='subscriptions',
         url_name='user_subscriptions'
     )
-    def get_subscriptiosn(self, request, *args, **kwargs):
+    def get_subscriptions(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             subscriptions = CustomUser.objects.filter(
                 subscriptions__subscribers=request.user
             )
             paginator = pagination.PageNumberPagination()
-            paginator.page_size = 10
+            paginator.page_size = settings.SUBSCRIPTIONS_PAGE_SIZE
             page = paginator.paginate_queryset(subscriptions, request)
             serializer = GetSubscriptionsSerializer(
                 page,
@@ -85,39 +85,45 @@ class CustomUserViewSet(UserViewSet):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
     @action(
-        ['POST', 'DELETE'],
+        methods=[],
         detail=True,
         url_path='subscribe',
     )
-    def add_delete_subscription(self, request, *args, **kwargs)-> Response:
-        user = request.user
-        subscribed_user_id = kwargs['id']
-        subscribed_user = subscription_creatable(user, subscribed_user_id)
-        if request.method == 'POST':
-            if user.subscribers.filter(subscriptions=subscribed_user).exists():
-                return Response(
-                    {'detail': 'Вы уже подписаны на данного пользователя.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            Subscription.objects.create(
-                subscriptions=subscribed_user,
-                subscribers=user
-            )
-            serializer = GetSubscriptionsSerializer(
-                subscribed_user,
-                context={'request': request}
-            )
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+    def manage_subscription(self, request, *args, **kwargs):
+        """
+        Пустая функция для точек входа POST и DELETE HTTP запросов к эндпоинту.
+        """
+        pass
 
-        if request.method == 'DELETE':
-            if not user.subscribers.filter(subscriptions=subscribed_user).exists():
-                return Response(
-                    {'detail': 'Вы не подписаны на этого пользователя.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            Subscription.objects.get(
-                subscriptions=subscribed_user,
-                subscribers=user
-            ).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+    @manage_subscription.mapping.post
+    def create_subscription(self, request, *args, **kwargs):
+        user, subscribed_user = get_subscription_data(request, kwargs)
 
+        if user.subscribers.filter(subscriptions=subscribed_user).exists():
+            return Response(
+                {'detail': 'Вы уже подписаны на данного пользователя.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        Subscription.objects.create(
+            subscriptions=subscribed_user,
+            subscribers=user
+        )
+        serializer = GetSubscriptionsSerializer(
+            subscribed_user,
+            context={'request': request}
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @manage_subscription.mapping.delete
+    def delete_subscription(self, request, *args, **kwargs):
+        user, subscribed_user = get_subscription_data(request, kwargs)
+        subscription = user.subscribers.filter(
+            subscriptions=subscribed_user
+        ).first()
+        if not subscription:
+            return Response(
+                {'detail': 'Вы не подписаны на этого пользователя.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        subscription.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

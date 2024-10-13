@@ -24,4 +24,3 @@ class IsAuthorAdminOrReadOnlyObject(permissions.BasePermission):
                 or request.user.is_superuser
             )
         return True
-

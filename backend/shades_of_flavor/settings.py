@@ -150,10 +150,6 @@ DJOSER = {
         'USER_VIEWSET': 'users.views.UserDjoserViewSet',
         'current_user': 'users.serializers.CustomUserSerializer',
     },
-    'PERMISSIONS': {
-        'user_list': ['core.permissions.AuthorAdminOrReadOnly'],
-        'user': ['core.permissions.AuthorAdminOrReadOnly'],
-    }
 }
 
 SIMPLE_JWT = {
@@ -166,3 +162,5 @@ EMPTY_FIELD = 'пусто'
 POSITIVE_SMALL_INTEGER_MIN = 1
 
 POSITIVE_SMALL_INTEGER_MAX = 32000
+
+SUBSCRIPTIONS_PAGE_SIZE = 10
