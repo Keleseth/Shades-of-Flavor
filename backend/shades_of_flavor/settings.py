@@ -72,7 +72,7 @@ WSGI_APPLICATION = 'shades_of_flavor.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-if os.getenv('TEST_DB', False):
+if os.getenv('TEST_DB', False) == 'True':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
