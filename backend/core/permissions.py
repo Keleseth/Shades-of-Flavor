@@ -15,6 +15,7 @@ class AuthenticatedOrReadOnlyRequest(permissions.BasePermission):
 
 class IsAuthorAdminOrReadOnlyObject(permissions.BasePermission):
     """Пермишен уровня объекта."""
+
     def has_object_permission(self, request, view, obj):
 
         if request.method not in permissions.SAFE_METHODS:
