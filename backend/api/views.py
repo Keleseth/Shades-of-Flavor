@@ -42,6 +42,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all().prefetch_related(
         'ingredients',
         'tags',
+        'is_in_shopping_cart',
     ). select_related('author')
     filterset_class = RecipeFilter
     permission_classes = (

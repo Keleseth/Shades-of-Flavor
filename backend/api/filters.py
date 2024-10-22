@@ -57,4 +57,6 @@ class RecipeFilter(filters.FilterSet):
         user = self.request.user
         if value is True and user.is_authenticated:
             return queryset.filter(is_in_shopping_cart=user)
+        if value is False and user.is_authenticated:
+            return queryset.exclude(is_favorited=user)
         return queryset

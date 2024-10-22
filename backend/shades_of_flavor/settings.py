@@ -147,7 +147,7 @@ REST_FRAMEWORK = {
 
 DJOSER = {
     'SERIALIZERS': {
-        'USER_VIEWSET': 'users.views.UserDjoserViewSet',
+        'USER_VIEWSET': 'users.views.CustomUserViewSet',
         'current_user': 'users.serializers.CustomUserSerializer',
     },
 }

@@ -105,7 +105,7 @@ class RecipeSerializer(BaseRecipeSerializer):
     def get_is_in_shopping_cart(self, obj):
         user = self.context['request'].user
         if user.is_authenticated:
-            return user.recipes_in_cart.filter(id=obj.id).exists()
+            return obj in user.recipes_in_cart.all()
         return False
 
     def create(self, validated_data):
@@ -124,7 +124,6 @@ class RecipeSerializer(BaseRecipeSerializer):
         ingredients_data = validated_data.pop('recipe_ingredients', None)
         tags_data = validated_data.pop('tags', None)
         if tags_data:
-            instance.tags.clear()
             instance.tags.set(tags_data)
         if ingredients_data:
             instance.ingredients.clear()
@@ -141,8 +140,7 @@ class RecipeSerializer(BaseRecipeSerializer):
             raise serializers.ValidationError(
                 'Поле tags обязательное.'
             )
-        tags_set = set(tags_list)
-        if len(tags_list) != len(tags_set):
+        if len(tags_list) != len(set(tags_list)):
             raise serializers.ValidationError(
                 'Нельзя указывать несколько одинаковых тегов.'
             )

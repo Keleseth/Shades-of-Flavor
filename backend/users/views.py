@@ -1,6 +1,6 @@
 from django.conf import settings
 from djoser.views import UserViewSet
-from rest_framework import pagination, status
+from rest_framework import pagination, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -28,6 +28,11 @@ class CustomUserViewSet(UserViewSet):
     )
     pagination_class = pagination.PageNumberPagination
     pagination_class.page_size_query_param = 'limit'
+
+    def get_permissions(self):
+        if self.action == 'create':
+            self.permission_classes = (permissions.AllowAny,)
+        return [permission() for permission in self.permission_classes]
 
     def list(self, request, *args, **kwargs):
         queryset = CustomUser.objects.all()
