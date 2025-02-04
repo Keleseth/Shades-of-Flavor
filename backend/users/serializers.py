@@ -32,6 +32,12 @@ class BaseCustomUserSerializer(UserSerializer):
             ).exists()
         return False
 
+    # def to_representation(self, instance):
+    #     representation = super().to_representation(instance)
+    #     representation.pop('avatar', None)
+    #     representation.pop('is_subscribed', None)
+    #     return representation
+
 
 class CustomUserSerializer(BaseCustomUserSerializer):
     """Сериализатор юзеров для регистрации с полем password."""

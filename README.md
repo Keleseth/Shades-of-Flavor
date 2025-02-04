@@ -53,4 +53,4 @@ Foodgram — это приложение для обмена рецептами,
 По адресу http://localhost/api/docs/ вы можете найти спецификацию API.
 
 
-
+Проект разработан Келесидисом Александром. GitHub: [Keleseth](https://github.com/Keleseth)
